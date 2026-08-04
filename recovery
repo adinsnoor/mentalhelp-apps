@@ -1,0 +1,893 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MentalHelp – Recovery Companion</title>
+<style>
+  :root {
+    --bg:#0d0f14;--bg-card:#141720;--bg-card2:#1a1e2a;--bg-input:#1e2232;
+    --accent:#6c63ff;--accent2:#9d8fff;--accent-muted:rgba(108,99,255,0.15);
+    --text:#e8eaf0;--text-muted:#7a8099;--text-dim:#4a5270;
+    --border:rgba(255,255,255,0.07);--border2:rgba(108,99,255,0.3);
+    --success:#4ade80;--warn:#fbbf24;--danger:#f87171;
+    --radius:16px;--radius-sm:10px;--radius-pill:999px;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,'SF Pro Display','Segoe UI',sans-serif;min-height:100vh;font-size:15px;line-height:1.6;-webkit-font-smoothing:antialiased}
+  #app{max-width:440px;margin:0 auto;min-height:100vh;position:relative}
+  .screen{display:none;padding:24px 20px 100px}
+  .screen.active{display:block}
+
+  /* NAV */
+  .nav{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:440px;background:rgba(13,15,20,0.92);backdrop-filter:blur(16px);border-top:1px solid var(--border);display:flex;justify-content:space-around;align-items:center;padding:10px 0 20px;z-index:100}
+  .nav-btn{display:flex;flex-direction:column;align-items:center;gap:3px;background:none;border:none;color:var(--text-dim);cursor:pointer;font-size:10px;letter-spacing:0.04em;text-transform:uppercase;transition:color 0.2s;padding:4px 12px;border-radius:var(--radius-sm)}
+  .nav-btn svg{width:22px;height:22px}
+  .nav-btn.active{color:var(--accent2)}
+
+  /* CARDS */
+  .card{background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius);padding:20px;margin-bottom:14px}
+  .card-dark{background:var(--bg-card2);border:1px solid var(--border);border-radius:var(--radius);padding:20px;margin-bottom:14px}
+  .card-accent{background:linear-gradient(135deg,rgba(108,99,255,0.18) 0%,rgba(74,62,200,0.08) 100%);border:1px solid var(--border2);border-radius:var(--radius);padding:20px;margin-bottom:14px}
+
+  /* TYPE */
+  .h1{font-size:26px;font-weight:700;letter-spacing:-0.5px;line-height:1.2}
+  .h2{font-size:19px;font-weight:600;letter-spacing:-0.3px}
+  .h3{font-size:15px;font-weight:600}
+  .label{font-size:11px;font-weight:600;letter-spacing:0.08em;text-transform:uppercase;color:var(--text-muted)}
+  .muted{color:var(--text-muted)}
+  .small{font-size:13px}
+
+  /* BUTTONS */
+  .btn{display:block;width:100%;padding:14px 20px;background:var(--accent);color:#fff;border:none;border-radius:var(--radius-sm);font-size:15px;font-weight:600;cursor:pointer;transition:opacity .2s,transform .1s;letter-spacing:-0.2px}
+  .btn:hover{opacity:.9}
+  .btn:active{transform:scale(.98)}
+  .btn-ghost{background:transparent;border:1px solid var(--border2);color:var(--accent2)}
+  .btn-ghost:hover{background:var(--accent-muted)}
+  .btn-danger-ghost{background:transparent;border:1px solid rgba(248,113,113,0.3);color:var(--danger)}
+  .btn-sm{padding:9px 16px;font-size:13px;width:auto;display:inline-block}
+
+  /* CHIPS */
+  .chip-group{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}
+  .chip{padding:8px 14px;border-radius:var(--radius-pill);border:1px solid var(--border);background:var(--bg-input);color:var(--text-muted);font-size:13px;cursor:pointer;transition:all .15s;user-select:none}
+  .chip:hover{border-color:var(--accent2);color:var(--text)}
+  .chip.selected{background:var(--accent-muted);border-color:var(--accent2);color:var(--accent2);font-weight:500}
+
+  /* RANGE */
+  input[type=range]{width:100%;-webkit-appearance:none;appearance:none;height:4px;background:var(--border);border-radius:2px;outline:none}
+  input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;appearance:none;width:22px;height:22px;background:var(--accent);border-radius:50%;cursor:pointer;box-shadow:0 0 0 4px rgba(108,99,255,0.2)}
+  .range-labels{display:flex;justify-content:space-between;margin-top:6px}
+
+  /* STEP */
+  .step-dot-row{display:flex;gap:6px;margin-bottom:24px}
+  .step-dot{height:3px;border-radius:2px;background:var(--border);flex:1;transition:background .3s}
+  .step-dot.done{background:var(--accent)}
+  .step-dot.active{background:var(--accent2)}
+
+  /* STREAK */
+  .streak-circle{width:110px;height:110px;border-radius:50%;background:conic-gradient(var(--accent) var(--p,0%),var(--bg-card2) 0%);display:flex;align-items:center;justify-content:center}
+  .streak-inner{width:88px;height:88px;border-radius:50%;background:var(--bg-card);display:flex;flex-direction:column;align-items:center;justify-content:center}
+
+  /* CHART */
+  .chart-bars{display:flex;align-items:flex-end;gap:6px;height:70px;margin-top:12px}
+  .bar-col{flex:1;display:flex;flex-direction:column;align-items:center;gap:4px}
+  .bar{width:100%;border-radius:4px 4px 0 0;background:var(--accent-muted);border:1px solid rgba(108,99,255,0.2);min-height:4px;transition:height .5s}
+  .bar.high{background:rgba(248,113,113,0.25);border-color:rgba(248,113,113,0.3)}
+  .bar.low{background:rgba(74,222,128,0.2);border-color:rgba(74,222,128,0.25)}
+  .bar-label{font-size:10px;color:var(--text-dim)}
+
+  /* AUDIO CARD */
+  .audio-card{border-radius:var(--radius);border:1px solid var(--border2);padding:18px 20px;margin-bottom:12px;position:relative;overflow:hidden}
+  .audio-card::before{content:'';position:absolute;inset:0;background:linear-gradient(135deg,rgba(108,99,255,0.1) 0%,transparent 60%);pointer-events:none}
+  .audio-card.emergency{border-color:rgba(248,113,113,0.4)}
+  .audio-card.emergency::before{background:linear-gradient(135deg,rgba(248,113,113,0.1) 0%,transparent 60%)}
+  .session-tag{display:inline-block;padding:3px 10px;border-radius:var(--radius-pill);font-size:11px;font-weight:600;letter-spacing:0.05em;background:var(--accent-muted);color:var(--accent2);margin-bottom:10px}
+  .session-tag.em{background:rgba(248,113,113,0.15);color:var(--danger)}
+
+  /* PLAYER */
+  .player-wrap{background:var(--bg-input);border:1px solid var(--border);border-radius:var(--radius-sm);overflow:hidden;margin-top:12px;position:relative}
+  .player-wrap iframe{display:block;width:100%;height:200px;border:none}
+  .player-overlay{position:absolute;top:0;left:0;right:0;bottom:0;background:rgba(13,15,20,0.6);display:flex;align-items:center;justify-content:center;cursor:pointer;transition:opacity .2s}
+  .player-overlay.hidden-overlay{display:none}
+  .player-overlay .play-icon{width:60px;height:60px;background:var(--accent);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:22px}
+  .player-controls{display:flex;align-items:center;gap:10px;padding:12px}
+  .play-btn-sm{width:40px;height:40px;border-radius:50%;background:var(--accent);border:none;color:#fff;font-size:16px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+  .player-info{flex:1;min-width:0}
+  .player-title{font-size:13px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .player-status{font-size:11px;color:var(--text-muted);margin-top:2px}
+  .waveform{display:flex;align-items:center;gap:2px;height:24px}
+  .wave-bar{width:3px;border-radius:2px;background:var(--accent);animation:wave 1s infinite;min-height:4px}
+  .wave-bar:nth-child(2){animation-delay:.1s}
+  .wave-bar:nth-child(3){animation-delay:.2s}
+  .wave-bar:nth-child(4){animation-delay:.15s}
+  .wave-bar:nth-child(5){animation-delay:.05s}
+  @keyframes wave{0%,100%{height:4px}50%{height:20px}}
+  .waveform.paused .wave-bar{animation:none;height:8px}
+
+  /* MINI PLAYER */
+  #mini-player{position:fixed;bottom:70px;left:50%;transform:translateX(-50%);width:calc(100% - 24px);max-width:416px;background:var(--bg-card);border:1px solid var(--border2);border-radius:var(--radius-sm);padding:10px 14px;display:none;align-items:center;gap:10px;z-index:90;box-shadow:0 4px 20px rgba(0,0,0,0.4)}
+  #mini-player.visible{display:flex}
+  #mini-icon{font-size:20px;flex-shrink:0}
+  #mini-info{flex:1;min-width:0}
+  #mini-title{font-size:12px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  #mini-status{font-size:10px;color:var(--text-muted)}
+  #mini-play{width:32px;height:32px;border-radius:50%;background:var(--accent);border:none;color:#fff;font-size:14px;cursor:pointer;flex-shrink:0;display:flex;align-items:center;justify-content:center}
+  #mini-stop{width:32px;height:32px;border-radius:50%;background:transparent;border:1px solid var(--border);color:var(--text-muted);font-size:12px;cursor:pointer;flex-shrink:0;display:flex;align-items:center;justify-content:center}
+
+  /* HIDDEN PLAYER CONTAINER */
+  #yt-container{position:fixed;bottom:-300px;left:-9999px;width:320px;height:180px;opacity:0;pointer-events:none}
+  #yt-container iframe{width:100%;height:100%;border:none}
+
+  /* QUOTE */
+  .quote-card{border-left:3px solid var(--accent);padding:14px 16px;background:var(--bg-card2);border-radius:0 var(--radius-sm) var(--radius-sm) 0;margin-bottom:14px}
+  .quote-card p{font-style:italic;font-size:14px;color:var(--text);line-height:1.7}
+  .quote-card .attr{font-size:12px;color:var(--text-dim);margin-top:6px;font-style:normal}
+
+  /* COACH BUBBLE */
+  .coach-bubble{background:var(--bg-card2);border:1px solid var(--border2);border-radius:4px var(--radius) var(--radius) var(--radius);padding:16px;margin-bottom:14px}
+
+  /* STATS */
+  .stats-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px}
+  .stat-box{background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius-sm);padding:14px}
+  .stat-val{font-size:24px;font-weight:700;letter-spacing:-0.5px}
+  .stat-label{font-size:11px;color:var(--text-muted);margin-top:2px}
+
+  /* MISC */
+  .sec-header{margin:28px 0 12px}
+  .relapse-step{display:flex;gap:14px;align-items:flex-start;padding:14px 0;border-bottom:1px solid var(--border)}
+  .relapse-step:last-child{border-bottom:none}
+  .step-num{width:28px;height:28px;border-radius:50%;background:var(--accent-muted);border:1px solid var(--border2);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:var(--accent2);flex-shrink:0}
+  textarea{width:100%;background:var(--bg-input);border:1px solid var(--border);border-radius:var(--radius-sm);color:var(--text);padding:12px;font-size:14px;resize:none;outline:none;font-family:inherit;transition:border-color .2s}
+  textarea:focus{border-color:var(--border2)}
+  .page-header{padding:20px 0 6px}
+  .greeting{font-size:13px;color:var(--text-muted);margin-bottom:4px}
+  .notif{position:fixed;top:20px;left:50%;transform:translateX(-50%);background:var(--bg-card);border:1px solid var(--border2);border-radius:var(--radius-sm);padding:12px 20px;font-size:14px;color:var(--text);z-index:999;opacity:0;transition:opacity .3s;max-width:360px;width:90%;text-align:center}
+  .notif.show{opacity:1}
+  .insight-box{background:rgba(108,99,255,0.08);border:1px solid rgba(108,99,255,0.25);border-radius:var(--radius-sm);padding:14px;margin-bottom:14px}
+  .insight-box .label{color:var(--accent2);margin-bottom:6px}
+  .dots span{display:inline-block;width:6px;height:6px;background:var(--accent2);border-radius:50%;margin:0 2px;animation:bounce 1.2s infinite}
+  .dots span:nth-child(2){animation-delay:.2s}
+  .dots span:nth-child(3){animation-delay:.4s}
+  @keyframes bounce{0%,80%,100%{transform:translateY(0)}40%{transform:translateY(-5px)}}
+  .fade-in{animation:fadeIn .4s ease}
+  @keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+  .badge{display:inline-block;padding:2px 10px;border-radius:var(--radius-pill);font-size:11px;font-weight:600}
+  .badge-green{background:rgba(74,222,128,0.15);color:var(--success)}
+  .badge-warn{background:rgba(251,191,36,0.15);color:var(--warn)}
+  .badge-danger{background:rgba(248,113,113,0.15);color:var(--danger)}
+  .badge-purple{background:var(--accent-muted);color:var(--accent2)}
+  .hidden{display:none!important}
+  .mt-8{margin-top:8px}.mt-12{margin-top:12px}.mt-16{margin-top:16px}.mt-20{margin-top:20px}
+  .mb-4{margin-bottom:4px}.mb-8{margin-bottom:8px}.mb-12{margin-bottom:12px}
+  .flex{display:flex}.items-center{align-items:center}.justify-between{justify-content:space-between}
+  .gap-8{gap:8px}.gap-12{gap:12px}
+
+  /* ONBOARDING */
+  .onboard-screen{min-height:100vh;display:flex;flex-direction:column;justify-content:center;align-items:center;padding:40px 24px;text-align:center}
+
+  /* BRANDING */
+  .brand-logo{display:flex;align-items:center;gap:10px;justify-content:center;margin-bottom:8px}
+  .brand-mark{width:48px;height:48px;border-radius:16px;background:linear-gradient(135deg,#6c63ff,#9d8fff);display:flex;align-items:center;justify-content:center;font-size:22px;box-shadow:0 0 24px rgba(108,99,255,0.4)}
+  .brand-name{font-size:26px;font-weight:800;letter-spacing:-1px;background:linear-gradient(135deg,#fff 30%,#9d8fff);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+  .brand-tagline{font-size:12px;color:var(--text-muted);letter-spacing:0.1em;text-transform:uppercase;margin-bottom:28px}
+  .brand-sm{display:flex;align-items:center;gap:6px}
+  .brand-sm .mark{width:28px;height:28px;border-radius:9px;background:linear-gradient(135deg,#6c63ff,#9d8fff);display:flex;align-items:center;justify-content:center;font-size:13px}
+  .brand-sm .name{font-size:15px;font-weight:700;letter-spacing:-0.5px;background:linear-gradient(135deg,#fff 30%,#9d8fff);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+</style>
+</head>
+<body>
+<div id="app">
+  <div class="notif" id="notif"></div>
+
+  <!-- Hidden YT container -->
+  <div id="yt-container"></div>
+
+  <!-- Mini Player -->
+  <div id="mini-player">
+    <div id="mini-icon">🎵</div>
+    <div id="mini-info">
+      <div id="mini-title">—</div>
+      <div id="mini-status">Sedang diputar</div>
+    </div>
+    <button id="mini-play" onclick="toggleMiniPlay()">⏸</button>
+    <button id="mini-stop" onclick="stopSession()">■</button>
+  </div>
+
+  <!-- ONBOARDING -->
+  <div id="onboard" class="hidden">
+    <div class="onboard-screen">
+      <div class="brand-logo">
+        <div class="brand-mark">🧠</div>
+        <div class="brand-name">MentalHelp</div>
+      </div>
+      <div class="brand-tagline">Recovery Companion</div>
+      <p class="muted small" style="max-width:280px;line-height:1.7;margin-bottom:36px">
+        Perjalanan pemulihan dimulai dari memahami diri sendiri. Kami hadir menemani setiap langkahnya.
+      </p>
+      <button class="btn" onclick="startApp()" style="max-width:280px">Mulai perjalanan saya →</button>
+      <p class="small muted" style="margin-top:16px;font-size:11px">Privat & aman. Data tersimpan hanya di perangkat Anda.</p>
+    </div>
+  </div>
+
+  <!-- MAIN APP -->
+  <div id="main-app" class="hidden">
+
+    <!-- HOME -->
+    <div id="screen-home" class="screen active">
+      <div class="page-header">
+        <div class="brand-sm mb-8">
+          <div class="mark">🧠</div>
+          <div class="name">MentalHelp</div>
+        </div>
+        <p class="greeting" id="greeting-text">Selamat pagi</p>
+        <h1 class="h1">Bagaimana kondisi<br>Anda hari ini?</h1>
+      </div>
+
+      <div class="card mt-20" style="display:flex;align-items:center;gap:20px">
+        <div class="streak-circle" id="streak-circle">
+          <div class="streak-inner">
+            <span style="font-size:26px;font-weight:700;letter-spacing:-1px" id="streak-days">0</span>
+            <span style="font-size:11px;color:var(--text-muted)">hari</span>
+          </div>
+        </div>
+        <div style="flex:1">
+          <div class="label mb-4">Streak Pemulihan</div>
+          <p id="streak-msg" class="small muted" style="line-height:1.5"></p>
+          <div class="mt-8"><span class="badge badge-purple" id="streak-badge">Aktif</span></div>
+        </div>
+      </div>
+
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px">
+        <button class="card" style="text-align:left;cursor:pointer;border:none;background:var(--bg-card)" onclick="goCheckin()">
+          <div style="font-size:22px;margin-bottom:8px">✦</div>
+          <div class="h3 mb-4">Check-in Harian</div>
+          <p class="small muted">Kenali kondisi & pemicu Anda</p>
+        </button>
+        <button class="card" style="text-align:left;cursor:pointer;border:none;background:var(--bg-card)" onclick="goRelapse()">
+          <div style="font-size:22px;margin-bottom:8px">🛡</div>
+          <div class="h3 mb-4">Baru Relapse?</div>
+          <p class="small muted">Bangkit tanpa rasa malu</p>
+        </button>
+      </div>
+
+      <div id="home-quote"></div>
+
+      <div class="sec-header"><div class="label">Minggu Ini</div></div>
+      <div class="stats-grid">
+        <div class="stat-box"><div class="stat-val" id="stat-checkins">0</div><div class="stat-label">Check-in dilakukan</div></div>
+        <div class="stat-box"><div class="stat-val" id="stat-avg-urge">—</div><div class="stat-label">Rata-rata dorongan</div></div>
+        <div class="stat-box"><div class="stat-val" id="stat-top-trigger">—</div><div class="stat-label">Pemicu utama</div></div>
+        <div class="stat-box"><div class="stat-val" id="stat-stability">—</div><div class="stat-label">Stabilitas emosi</div></div>
+      </div>
+
+      <div class="card">
+        <div class="flex justify-between items-center mb-12">
+          <div><div class="label mb-4">Tren Dorongan</div><p class="small muted">7 hari terakhir</p></div>
+          <div class="badge badge-purple" id="trend-badge">—</div>
+        </div>
+        <div class="chart-bars" id="urge-chart"></div>
+      </div>
+    </div>
+
+    <!-- CHECK-IN -->
+    <div id="screen-checkin" class="screen">
+      <div class="page-header">
+        <p class="label mb-8">Trigger Discovery Worksheet</p>
+        <h1 class="h1">Mari kenali<br>kondisi Anda</h1>
+      </div>
+      <div id="checkin-flow">
+        <div class="step-dot-row mt-20" id="step-dots">
+          <div class="step-dot active" id="dot-0"></div>
+          <div class="step-dot" id="dot-1"></div>
+          <div class="step-dot" id="dot-2"></div>
+          <div class="step-dot" id="dot-3"></div>
+        </div>
+        <div id="step-0" class="fade-in">
+          <p class="h3 mb-4">Apa yang Anda rasakan saat ini?</p>
+          <p class="small muted mb-12">Pilih semua yang relevan</p>
+          <div class="chip-group" id="chips-feeling">
+            <div class="chip" data-val="Kesepian">Kesepian</div><div class="chip" data-val="Bosan">Bosan</div>
+            <div class="chip" data-val="Cemas">Cemas</div><div class="chip" data-val="Stres">Stres</div>
+            <div class="chip" data-val="Marah">Marah</div><div class="chip" data-val="Sedih">Sedih</div>
+            <div class="chip" data-val="Kecewa">Kecewa</div><div class="chip" data-val="Tidak berharga">Tidak berharga</div>
+            <div class="chip" data-val="Frustrasi">Frustrasi</div><div class="chip" data-val="Kosong">Kosong</div>
+            <div class="chip" data-val="Lainnya">Lainnya</div>
+          </div>
+          <button class="btn mt-20" onclick="nextStep()">Lanjut →</button>
+        </div>
+        <div id="step-1" class="hidden fade-in">
+          <p class="h3 mb-4">Apa yang terjadi sebelum dorongan muncul?</p>
+          <p class="small muted mb-12">Pilih semua yang relevan</p>
+          <div class="chip-group" id="chips-trigger">
+            <div class="chip" data-val="Sendirian">Sendirian</div>
+            <div class="chip" data-val="Scroll media sosial">Scroll media sosial</div>
+            <div class="chip" data-val="Konflik pasangan">Konflik pasangan</div>
+            <div class="chip" data-val="Konflik keluarga">Konflik keluarga</div>
+            <div class="chip" data-val="Stres pekerjaan">Stres pekerjaan</div>
+            <div class="chip" data-val="Sulit tidur">Sulit tidur</div>
+            <div class="chip" data-val="Konten seksual">Melihat konten seksual</div>
+            <div class="chip" data-val="Tidak ada aktivitas">Tidak ada aktivitas</div>
+            <div class="chip" data-val="Baru bangun tidur">Baru bangun tidur</div>
+            <div class="chip" data-val="Lainnya">Lainnya</div>
+          </div>
+          <div style="display:flex;gap:10px;margin-top:20px">
+            <button class="btn btn-ghost" style="flex:0.4" onclick="prevStep()">← Kembali</button>
+            <button class="btn" style="flex:1" onclick="nextStep()">Lanjut →</button>
+          </div>
+        </div>
+        <div id="step-2" class="hidden fade-in">
+          <p class="h3 mb-4">Seberapa kuat dorongan saat ini?</p>
+          <p class="small muted mb-12">Geser untuk menunjukkan intensitasnya</p>
+          <div class="card-dark">
+            <div class="flex justify-between items-center mb-12">
+              <span class="small muted">Hampir tidak ada</span>
+              <span style="font-size:32px;font-weight:700;color:var(--accent2)" id="urge-val">5</span>
+              <span class="small muted">Sangat kuat</span>
+            </div>
+            <input type="range" min="1" max="10" value="5" id="urge-slider" oninput="updateUrge(this.value)">
+            <div class="range-labels">
+              <span class="small" style="color:var(--success)">1</span>
+              <span class="small muted">5</span>
+              <span class="small" style="color:var(--danger)">10</span>
+            </div>
+          </div>
+          <div id="urge-context" class="insight-box mt-12"></div>
+          <div style="display:flex;gap:10px;margin-top:16px">
+            <button class="btn btn-ghost" style="flex:0.4" onclick="prevStep()">← Kembali</button>
+            <button class="btn" style="flex:1" onclick="nextStep()">Lanjut →</button>
+          </div>
+        </div>
+        <div id="step-3" class="hidden fade-in">
+          <p class="h3 mb-4">Apa yang sebenarnya Anda butuhkan sekarang?</p>
+          <p class="small muted mb-12">Di balik dorongan, selalu ada kebutuhan nyata</p>
+          <div class="chip-group" id="chips-need">
+            <div class="chip" data-val="Istirahat">Istirahat</div>
+            <div class="chip" data-val="Dukungan emosional">Dukungan emosional</div>
+            <div class="chip" data-val="Curhat">Seseorang untuk curhat</div>
+            <div class="chip" data-val="Aktivitas produktif">Aktivitas produktif</div>
+            <div class="chip" data-val="Koneksi sosial">Koneksi sosial</div>
+            <div class="chip" data-val="Relaksasi">Relaksasi</div>
+            <div class="chip" data-val="Tidur">Tidur</div>
+            <div class="chip" data-val="Healing emosional">Healing emosional</div>
+          </div>
+          <div style="display:flex;gap:10px;margin-top:20px">
+            <button class="btn btn-ghost" style="flex:0.4" onclick="prevStep()">← Kembali</button>
+            <button class="btn" style="flex:1" onclick="submitCheckin()">Lihat Insight ↗</button>
+          </div>
+        </div>
+      </div>
+      <div id="checkin-result" class="hidden fade-in">
+        <div class="sec-header"><p class="label mb-4">Insight Anda</p></div>
+        <div class="insight-box mb-12" id="result-insight">
+          <div class="label mb-8">Analisis Kondisi</div>
+          <p class="small" id="insight-text"></p>
+        </div>
+        <div id="result-quote"></div>
+        <div class="sec-header"><div class="label mb-4">Recovery Coach</div></div>
+        <div class="coach-bubble" id="coach-msg">
+          <div class="dots" id="coach-loading"><span></span><span></span><span></span></div>
+          <p id="coach-text" class="small" style="display:none;line-height:1.7"></p>
+        </div>
+        <div class="sec-header"><div class="label mb-4">Rekomendasi Sesi Audio</div></div>
+        <div id="audio-recommendation"></div>
+        <button class="btn btn-ghost mt-8" onclick="resetCheckin()">← Kembali ke Beranda</button>
+      </div>
+    </div>
+
+    <!-- AUDIO LIBRARY -->
+    <div id="screen-audio" class="screen">
+      <div class="page-header">
+        <p class="label mb-8">MentalHelp Audiotherapy</p>
+        <h1 class="h1">Sesi pemulihan<br>untuk Anda</h1>
+      </div>
+      <p class="small muted mt-12 mb-20" style="line-height:1.6">Pilih sesi berdasarkan kondisi Anda saat ini. Audio diputar langsung di sini tanpa meninggalkan aplikasi.</p>
+      <div id="audio-cards"></div>
+    </div>
+
+    <!-- PROGRESS -->
+    <div id="screen-progress" class="screen">
+      <div class="page-header">
+        <p class="label mb-8">Perkembangan Anda</p>
+        <h1 class="h1">Perjalanan<br>pemulihan</h1>
+      </div>
+      <div class="card-accent mt-20">
+        <div class="flex items-center gap-12">
+          <div style="position:relative;width:80px;height:80px;flex-shrink:0">
+            <svg width="80" height="80" viewBox="0 0 80 80">
+              <circle cx="40" cy="40" r="34" fill="none" stroke="rgba(108,99,255,0.15)" stroke-width="8"/>
+              <circle cx="40" cy="40" r="34" fill="none" stroke="#6c63ff" stroke-width="8" stroke-dasharray="213.6" id="stability-arc" stroke-dashoffset="213.6" stroke-linecap="round" transform="rotate(-90 40 40)" style="transition:stroke-dashoffset 1s"/>
+            </svg>
+            <div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:700" id="stability-pct">—</div>
+          </div>
+          <div style="flex:1">
+            <div class="label mb-4">Skor Stabilitas Emosi</div>
+            <p class="small muted" id="stability-desc">Lakukan check-in harian untuk melacak perkembangan Anda.</p>
+          </div>
+        </div>
+      </div>
+      <div class="stats-grid mt-12">
+        <div class="stat-box"><div class="stat-val" id="prog-streak">0</div><div class="stat-label">Streak saat ini</div></div>
+        <div class="stat-box"><div class="stat-val" id="prog-total">0</div><div class="stat-label">Total check-in</div></div>
+        <div class="stat-box"><div class="stat-val" id="prog-longest">0</div><div class="stat-label">Streak terpanjang</div></div>
+        <div class="stat-box"><div class="stat-val" id="prog-growth">—</div><div class="stat-label">Pertumbuhan 30 hari</div></div>
+      </div>
+      <div class="sec-header"><div class="label">Analisis Pemicu</div></div>
+      <div class="card" id="trigger-analysis"><p class="small muted">Lakukan beberapa check-in untuk melihat pola pemicu Anda.</p></div>
+      <div class="sec-header"><div class="label">Riwayat Dorongan (14 hari)</div></div>
+      <div class="card">
+        <div class="chart-bars" id="progress-chart"></div>
+        <div class="flex justify-between mt-8">
+          <span class="small muted">14 hari lalu</span>
+          <span class="small muted">Hari ini</span>
+        </div>
+      </div>
+      <div style="margin-top:28px">
+        <button class="btn btn-ghost btn-danger-ghost" onclick="confirmReset()">Reset data pemulihan</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- NAV -->
+  <nav class="nav hidden" id="main-nav">
+    <button class="nav-btn active" id="nav-home" onclick="switchTab('home')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9.5L12 3l9 6.5V20a1 1 0 01-1 1H4a1 1 0 01-1-1V9.5z"/><path d="M9 21V12h6v9"/></svg>
+      Beranda
+    </button>
+    <button class="nav-btn" id="nav-checkin" onclick="switchTab('checkin')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 8v4l3 3"/></svg>
+      Check-in
+    </button>
+    <button class="nav-btn" id="nav-audio" onclick="switchTab('audio')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg>
+      Audio
+    </button>
+    <button class="nav-btn" id="nav-progress" onclick="switchTab('progress')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M18 20V10M12 20V4M6 20v-6"/></svg>
+      Progress
+    </button>
+  </nav>
+</div>
+
+<script>
+// =============================================
+// AUDIO SOURCE — obfuscated, not displayed to user
+// =============================================
+const _amap = (function(){
+  const b = 'aHR0cHM6Ly93d3cueW91dHViZS5jb20vZW1iZWQv';
+  const ids = [
+    'clAyNVFqTDJsNA==',
+    'cDFpUWEwQUQ5b1E=',
+    'SElwSE9WRUJLWXc=',
+    'Q1MtVDJJR3BPbzA=',
+    'RFJ2eDdQalFGZzQ=',
+    'dkpLX094LS00czA='
+  ];
+  return ids.map(id => atob(b) + atob(id) + '?autoplay=1&enablejsapi=1&rel=0&modestbranding=1');
+})();
+
+// =============================================
+// STATE
+// =============================================
+const STORE_KEY = 'mh_rc_v2';
+function loadState(){try{const r=localStorage.getItem(STORE_KEY);if(r)return JSON.parse(r)}catch(e){}return{streak:0,streakStart:null,longestStreak:0,totalCheckins:0,checkins:[],lastCheckinDate:null,relapses:0}}
+function saveState(){try{localStorage.setItem(STORE_KEY,JSON.stringify(state))}catch(e){}}
+let state = loadState();
+
+// =============================================
+// PLAYER STATE
+// =============================================
+let currentSession = null;
+let isPlaying = false;
+let ytIframe = null;
+
+function loadSession(sessionId) {
+  const s = SESSIONS.find(x => x.id === sessionId);
+  if (!s) return;
+  
+  currentSession = s;
+  isPlaying = true;
+
+  // Build iframe in hidden container
+  const container = document.getElementById('yt-container');
+  const src = _amap[s._srcIdx];
+  container.innerHTML = `<iframe src="${src}" allow="autoplay;encrypted-media" allowfullscreen></iframe>`;
+  ytIframe = container.querySelector('iframe');
+
+  // Show mini player
+  document.getElementById('mini-player').classList.add('visible');
+  document.getElementById('mini-icon').textContent = s.icon;
+  document.getElementById('mini-title').textContent = s.title;
+  document.getElementById('mini-status').textContent = 'Sedang diputar';
+  document.getElementById('mini-play').textContent = '⏸';
+
+  // Update waveform in expanded player if visible
+  updateExpandedPlayer(sessionId);
+  showNotif(`▶ ${s.title} sedang diputar`);
+}
+
+function updateExpandedPlayer(sessionId) {
+  const cards = document.querySelectorAll('.expanded-player');
+  cards.forEach(c => {
+    const sid = parseInt(c.dataset.sid);
+    const wf = c.querySelector('.waveform');
+    const statusEl = c.querySelector('.player-status');
+    const playBtn = c.querySelector('.play-btn-sm');
+    if (sid === sessionId && isPlaying) {
+      if(wf) wf.classList.remove('paused');
+      if(statusEl) statusEl.textContent = 'Sedang diputar...';
+      if(playBtn) playBtn.textContent = '⏸';
+    } else {
+      if(wf) wf.classList.add('paused');
+      if(statusEl) statusEl.textContent = 'Klik untuk memutar';
+      if(playBtn) playBtn.textContent = '▶';
+    }
+  });
+}
+
+function toggleMiniPlay() {
+  if (!currentSession) return;
+  isPlaying = !isPlaying;
+  const btn = document.getElementById('mini-play');
+  const status = document.getElementById('mini-status');
+  
+  if (isPlaying) {
+    // Resume: reload iframe
+    loadSession(currentSession.id);
+  } else {
+    // Pause: clear iframe
+    const container = document.getElementById('yt-container');
+    container.innerHTML = '';
+    ytIframe = null;
+    btn.textContent = '▶';
+    status.textContent = 'Dijeda';
+    updateExpandedPlayer(-1);
+  }
+}
+
+function stopSession() {
+  const container = document.getElementById('yt-container');
+  container.innerHTML = '';
+  ytIframe = null;
+  currentSession = null;
+  isPlaying = false;
+  document.getElementById('mini-player').classList.remove('visible');
+  updateExpandedPlayer(-1);
+}
+
+function playSession(sessionId) {
+  if (currentSession && currentSession.id === sessionId && isPlaying) {
+    showNotif('Sesi ini sudah sedang diputar');
+    return;
+  }
+  loadSession(sessionId);
+}
+
+// =============================================
+// SESSIONS DATA
+// =============================================
+const SESSIONS = [
+  {id:1,_srcIdx:0,icon:'🌊',tag:'Sesi 1',title:'Emotional Regulation & Urge Recovery',desc:'Menenangkan sistem emosi dan mengelola dorongan dengan teknik regulasi berbasis neurosains.',benefit:'Penurunan intensitas dorongan dalam 15–20 menit pertama.',emergency:false},
+  {id:2,_srcIdx:1,icon:'🧠',tag:'Sesi 2',title:'Dopamine Reset & Brain Recovery',desc:'Membantu otak kembali ke baseline dopamin alami dan memulihkan kemampuan fokus serta motivasi.',benefit:'Fokus membaik, motivasi kembali muncul, brain fog berkurang.',emergency:false},
+  {id:3,_srcIdx:2,icon:'💜',tag:'Sesi 3',title:'Trauma Healing & Emotional Restoration',desc:'Memproses luka emosional dan kesepian yang menjadi akar dari dorongan berulang.',benefit:'Rasa kosong berkurang, koneksi emosional dengan diri sendiri meningkat.',emergency:false},
+  {id:4,_srcIdx:3,icon:'🔥',tag:'Sesi 4',title:'Identity Rebuilding & Self-Mastery',desc:'Membangun kembali identitas, kepercayaan diri, dan rasa diri yang kuat melampaui kecanduan.',benefit:'Kepercayaan diri meningkat, kejelasan tentang siapa Anda yang sesungguhnya.',emergency:false},
+  {id:5,_srcIdx:4,icon:'✨',tag:'Sesi 5',title:'Releasing Sexual Attachments & Mental Cleansing',desc:'Melepaskan fantasi dan intrusive thoughts melalui teknik mental cleansing berbasis mindfulness.',benefit:'Pikiran lebih jernih, obsesi terhadap konten seksual melemah.',emergency:false},
+  {id:6,_srcIdx:5,icon:'🛡',tag:'EMERGENCY',title:'Breaking the Shame Cycle',desc:'Sesi khusus untuk bangkit setelah relapse tanpa tenggelam dalam rasa malu.',benefit:'Rasa malu mereda, motivasi bangkit kembali muncul, siklus self-punishment terhenti.',emergency:true}
+];
+
+function renderAudioCard(session, isRecommended=false) {
+  const tagCls = session.emergency ? 'em' : '';
+  const cardCls = session.emergency ? 'audio-card emergency' : 'audio-card card-accent';
+  const isActive = currentSession && currentSession.id === session.id && isPlaying;
+  return `
+    <div class="${cardCls}">
+      <div class="flex items-center gap-12 mb-12">
+        <span style="font-size:28px">${session.icon}</span>
+        <div style="flex:1">
+          <span class="session-tag ${tagCls}">${session.tag}</span>
+          <div class="h3">${session.title}</div>
+        </div>
+      </div>
+      <p class="small muted" style="line-height:1.6;margin-bottom:10px">${session.desc}</p>
+      <div class="insight-box" style="margin-bottom:12px">
+        <div class="label mb-4">Manfaat</div>
+        <p class="small">${session.benefit}</p>
+      </div>
+      ${isRecommended ? '<p class="small muted" style="margin-bottom:10px">Direkomendasikan berdasarkan kondisi Anda saat ini.</p>' : ''}
+      <!-- Expanded Player -->
+      <div class="player-wrap expanded-player" data-sid="${session.id}">
+        <div class="player-controls">
+          <button class="play-btn-sm" onclick="playSession(${session.id})">${isActive ? '⏸' : '▶'}</button>
+          <div class="player-info">
+            <div class="player-title">${session.title}</div>
+            <div class="player-status">${isActive ? 'Sedang diputar...' : 'Klik untuk memutar'}</div>
+          </div>
+          <div class="waveform ${isActive ? '' : 'paused'}">
+            <div class="wave-bar" style="height:10px"></div>
+            <div class="wave-bar" style="height:16px"></div>
+            <div class="wave-bar" style="height:8px"></div>
+            <div class="wave-bar" style="height:20px"></div>
+            <div class="wave-bar" style="height:12px"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+function getRecommendedSessions(d) {
+  const r = [];
+  if (d.urge >= 7) r.push(SESSIONS[0]);
+  if (d.feelings.some(f=>['Bosan','Tidak berharga'].includes(f))) r.push(SESSIONS[1]);
+  if (d.feelings.some(f=>['Kesepian','Sedih','Kosong','Kecewa'].includes(f))) r.push(SESSIONS[2]);
+  if (d.feelings.some(f=>['Tidak berharga','Kecewa'].includes(f))) r.push(SESSIONS[3]);
+  if (d.triggers.some(t=>['Konten seksual','Scroll media sosial'].includes(t))) r.push(SESSIONS[4]);
+  const seen=new Set(); const u=r.filter(s=>{if(seen.has(s.id))return false;seen.add(s.id);return true});
+  if (!u.length) u.push(SESSIONS[0]);
+  return u.slice(0,2);
+}
+
+// =============================================
+// QUOTES
+// =============================================
+const QUOTES={
+  lonely:[{text:"Apa yang Anda butuhkan saat ini mungkin bukan pelarian, tetapi koneksi yang lebih dalam dengan diri sendiri.",attr:"Refleksi Pemulihan"},{text:"Kesepian yang Anda rasakan adalah undangan untuk mengenal diri lebih dalam.",attr:"MentalHelp"}],
+  sad:[{text:"Kesedihan Anda valid. Cukup duduk bersamanya, tanpa melarikan diri.",attr:"MentalHelp"},{text:"Malam ini mungkin berat. Tapi Anda sudah melewati malam-malam sebelumnya.",attr:"Recovery Path"}],
+  stressed:[{text:"Stres bukan sinyal untuk melarikan diri. Ia adalah sinyal bahwa Anda membutuhkan istirahat yang nyata.",attr:"MentalHelp"},{text:"Satu napas panjang lebih berguna dari satu klik yang akan Anda sesali.",attr:"Recovery Path"}],
+  urge_high:[{text:"Dorongan adalah gelombang. Tugas Anda bukan menghentikannya, tetapi membiarkannya berlalu.",attr:"Mindfulness Recovery"},{text:"Setiap kali Anda menolak dorongan, Anda membangun satu lapisan kekuatan yang tidak bisa dicuri.",attr:"MentalHelp"},{text:"Anda lebih dari impuls Anda. Identitas Anda lebih besar dari momen ini.",attr:"Recovery Path"}],
+  urge_low:[{text:"Ketenangan yang Anda rasakan hari ini adalah buah dari perjuangan yang tidak terlihat.",attr:"MentalHelp"},{text:"Fondasi pemulihan dibangun di hari-hari seperti ini — tenang, sadar, hadir.",attr:"Recovery Path"}],
+  relapse:[{text:"Satu kesalahan tidak menghapus kemajuan yang telah Anda bangun.",attr:"MentalHelp"},{text:"Relapse bukan kegagalan karakter. Ia adalah bagian dari penyakit yang sedang Anda lawan.",attr:"Clinical Psychology"},{text:"Hari ini Anda jatuh. Hari ini juga Anda bangkit. Keduanya terjadi dalam satu hari yang sama.",attr:"Healing Words"}],
+  general:[{text:"Pemulihan bukan garis lurus. Ia bergelombang, seperti Anda.",attr:"MentalHelp"},{text:"Anda tidak harus sempurna untuk layak mendapat pemulihan.",attr:"Recovery Companion"},{text:"Yang terpenting bukan seberapa cepat Anda pulih, tetapi bahwa Anda terus berjalan.",attr:"MentalHelp"},{text:"Otak Anda sedang pulih. Beri ia waktu, bukan hukuman.",attr:"Neuroscience of Recovery"}]
+};
+function getQuote(ctx){
+  const f=ctx.feelings||[],u=ctx.urge||5;
+  let p=[];
+  if(ctx.isRelapse)p=p.concat(QUOTES.relapse);
+  if(f.some(x=>['Kesepian','Kosong'].includes(x)))p=p.concat(QUOTES.lonely);
+  if(f.some(x=>['Sedih','Kecewa'].includes(x)))p=p.concat(QUOTES.sad);
+  if(f.some(x=>['Stres','Frustrasi','Cemas'].includes(x)))p=p.concat(QUOTES.stressed);
+  if(u>=7)p=p.concat(QUOTES.urge_high,QUOTES.urge_high);
+  if(u<=3)p=p.concat(QUOTES.urge_low);
+  if(!p.length)p=QUOTES.general;
+  return p[Math.floor(Math.random()*p.length)];
+}
+
+// =============================================
+// CHECK-IN FLOW
+// =============================================
+let currentStep=0;
+let checkinData={feelings:[],triggers:[],urge:5,needs:[]};
+function goCheckin(){resetCheckin();switchTab('checkin')}
+function resetCheckin(){
+  currentStep=0;checkinData={feelings:[],triggers:[],urge:5,needs:[]};
+  document.getElementById('checkin-flow').classList.remove('hidden');
+  document.getElementById('checkin-result').classList.add('hidden');
+  document.querySelectorAll('.chip').forEach(c=>c.classList.remove('selected'));
+  document.getElementById('urge-slider').value=5;
+  document.getElementById('urge-val').textContent='5';
+  updateStepDisplay();
+}
+function updateStepDisplay(){
+  for(let i=0;i<4;i++){
+    const el=document.getElementById(`step-${i}`);
+    const dot=document.getElementById(`dot-${i}`);
+    if(i===currentStep){el.classList.remove('hidden');el.classList.add('fade-in');dot.classList.add('active');dot.classList.remove('done')}
+    else if(i<currentStep){el.classList.add('hidden');dot.classList.remove('active');dot.classList.add('done')}
+    else{el.classList.add('hidden');dot.classList.remove('active','done')}
+  }
+}
+function getSelectedChips(id){return Array.from(document.querySelectorAll(`#${id} .chip.selected`)).map(c=>c.dataset.val)}
+function nextStep(){
+  if(currentStep===0){checkinData.feelings=getSelectedChips('chips-feeling');if(!checkinData.feelings.length){showNotif('Pilih setidaknya satu perasaan');return}}
+  if(currentStep===1)checkinData.triggers=getSelectedChips('chips-trigger');
+  if(currentStep===2)checkinData.urge=parseInt(document.getElementById('urge-slider').value);
+  if(currentStep<3){currentStep++;updateStepDisplay()}
+}
+function prevStep(){if(currentStep>0){currentStep--;updateStepDisplay()}}
+function updateUrge(v){
+  document.getElementById('urge-val').textContent=v;
+  const el=document.getElementById('urge-context'),n=parseInt(v);
+  if(n>=8)el.innerHTML='<div class="label" style="color:var(--danger);margin-bottom:4px">Intensitas Tinggi</div><p class="small">Dorongan yang kuat biasanya berlalu dalam 20 menit. Sesi audio darurat tersedia untuk Anda.</p>';
+  else if(n>=5)el.innerHTML='<div class="label" style="color:var(--warn);margin-bottom:4px">Intensitas Sedang</div><p class="small">Anda masih dalam kendali. Satu langkah kecil cukup untuk mengalihkan arah.</p>';
+  else el.innerHTML='<div class="label" style="color:var(--success);margin-bottom:4px">Intensitas Rendah</div><p class="small">Ini saat yang tepat untuk check-in dan membangun kesadaran diri.</p>';
+}
+function submitCheckin(){
+  checkinData.needs=getSelectedChips('chips-need');
+  const today=new Date().toDateString();
+  state.checkins.push({date:today,...checkinData});
+  state.totalCheckins++;
+  if(state.lastCheckinDate!==today){
+    if(state.lastCheckinDate===new Date(Date.now()-86400000).toDateString())state.streak++;
+    else if(!state.lastCheckinDate)state.streak=1;
+    else state.streak=1;
+    state.longestStreak=Math.max(state.longestStreak,state.streak);
+    state.lastCheckinDate=today;
+  }
+  if(!state.streakStart)state.streakStart=today;
+  saveState();
+  document.getElementById('checkin-flow').classList.add('hidden');
+  document.getElementById('checkin-result').classList.remove('hidden');
+  document.getElementById('checkin-result').classList.add('fade-in');
+  renderResult();refreshHome();refreshProgress();
+}
+function renderResult(){
+  const{feelings,triggers,urge}=checkinData;
+  let insight='';
+  if(feelings.includes('Kesepian')||feelings.includes('Kosong'))insight='Data Anda menunjukkan bahwa dorongan Anda kemungkinan besar bukan tentang gairah seksual — melainkan kebutuhan koneksi emosional yang tidak terpenuhi.';
+  else if(feelings.includes('Stres')||feelings.includes('Cemas')||feelings.includes('Frustrasi'))insight='Pemicu terbesar Anda tampaknya adalah stres dan kelelahan emosional. Otak Anda mencari "reset" cepat melalui dopamin.';
+  else if(urge>=8)insight='Dorongan Anda saat ini sangat intens. Ini adalah momen kritis — pilihan yang tepat akan memperkuat koneksi neural pemulihan Anda secara signifikan.';
+  else if(feelings.includes('Bosan')||triggers.includes('Tidak ada aktivitas'))insight='Kebosanan dan kekosongan aktivitas adalah kondisi paling rentan. Otak Anda aktif mencari stimulasi.';
+  else if(feelings.includes('Tidak berharga')||feelings.includes('Kecewa'))insight='Ketika kita merasa tidak layak, dorongan bisa muncul sebagai bentuk hukuman atau pelarian. Anda tidak perlu menghukum diri — Anda perlu penyembuhan.';
+  else insight='Check-in ini adalah langkah penting dalam memahami pola pemulihan Anda.';
+  document.getElementById('insight-text').textContent=insight;
+  const q=getQuote({feelings,urge});
+  document.getElementById('result-quote').innerHTML=`<div class="quote-card"><p>"${q.text}"</p><div class="attr">— ${q.attr}</div></div>`;
+  document.getElementById('coach-loading').style.display='block';
+  document.getElementById('coach-text').style.display='none';
+  setTimeout(()=>{
+    const msg=generateCoachMsg(feelings,triggers,urge);
+    document.getElementById('coach-loading').style.display='none';
+    const ct=document.getElementById('coach-text');ct.textContent=msg;ct.style.display='block';
+  },1800);
+  const rec=getRecommendedSessions({feelings,triggers,urge});
+  document.getElementById('audio-recommendation').innerHTML=rec.map(s=>renderAudioCard(s,true)).join('');
+  document.querySelectorAll('#audio-recommendation .play-btn-sm').forEach(btn=>{
+    btn.onclick=()=>playSession(parseInt(btn.closest('.expanded-player').dataset.sid));
+  });
+}
+function generateCoachMsg(feelings,triggers,urge){
+  const f=feelings[0]||'beragam perasaan';
+  let session='Sesi 1: Emotional Regulation',action='jauhi layar selama 15 menit dan lakukan aktivitas fisik ringan';
+  if(feelings.includes('Kesepian')||feelings.includes('Kosong')){session='Sesi 3: Trauma Healing';action='hubungi seseorang yang Anda percaya, atau tulis di jurnal tentang apa yang Anda rindukan'}
+  else if(feelings.includes('Stres')||feelings.includes('Cemas')){session='Sesi 1: Emotional Regulation';action='lakukan teknik pernapasan 4-7-8: tarik 4 detik, tahan 7, buang 8'}
+  else if(feelings.includes('Tidak berharga')||feelings.includes('Kecewa')){session='Sesi 4: Identity Rebuilding';action='tulis satu hal kecil yang Anda lakukan dengan baik hari ini'}
+  const note=urge>=7?'Saya tahu dorongan ini terasa sangat kuat.':urge>=4?'Dorongan yang Anda rasakan perlu dikelola sebelum menguat.':'Kondisi Anda relatif stabil saat ini.';
+  return `${note} Dari check-in ini, tampaknya rasa ${f} memainkan peran besar dalam kondisi Anda. Ini bukan tentang kemauan yang lemah — ini tentang kebutuhan emosional yang belum terpenuhi. Saya merekomendasikan ${session} untuk Anda. Untuk 15 menit ke depan: ${action}.`;
+}
+
+// =============================================
+// RELAPSE
+// =============================================
+let relapseStep=0;
+function goRelapse(){relapseStep=0;showRelapseModal()}
+function showRelapseModal(){
+  const existing=document.getElementById('relapse-overlay');if(existing)existing.remove();
+  const ov=document.createElement('div');ov.id='relapse-overlay';ov.className='screen active fade-in';ov.style.paddingBottom='100px';
+  ov.innerHTML=`
+    <div class="page-header"><p class="label mb-8" style="color:var(--accent2)">Rise After Relapse</p><h1 class="h1">Anda tidak sendirian<br>dalam ini</h1></div>
+    <div id="rs-0" class="mt-20">
+      <div class="card-accent mb-14">
+        <div style="font-size:28px;margin-bottom:12px">🛡</div>
+        <div class="relapse-step"><div class="step-num">1</div><div><div class="h3 mb-4">Relapse tidak menghapus kemajuan Anda</div><p class="small muted" style="line-height:1.6">Pemulihan bukan garis lurus. Yang membedakan bukan apakah Anda jatuh — melainkan bagaimana Anda bangkit.</p></div></div>
+        <div class="relapse-step"><div class="step-num">2</div><div><div class="h3 mb-4">Rasa malu adalah musuh, bukan guru</div><p class="small muted" style="line-height:1.6">Belas kasih pada diri sendiri adalah fondasi pemulihan yang nyata.</p></div></div>
+        <div class="relapse-step"><div class="step-num">3</div><div><div class="h3 mb-4">Momen ini bisa menjadi titik balik</div><p class="small muted" style="line-height:1.6">Jika Anda ada di sini, berarti Anda masih peduli.</p></div></div>
+      </div>
+      <button class="btn" onclick="relapseNext()">Saya siap berefleksi →</button>
+      <button class="btn btn-ghost mt-8" onclick="closeRelapse()">Kembali ke beranda</button>
+    </div>
+    <div id="rs-1" class="hidden fade-in mt-20">
+      <div class="card mb-12">
+        <div class="label mb-12">Refleksi Singkat</div>
+        <p class="small muted mb-8">Apa yang terjadi sebelum relapse?</p>
+        <textarea id="rq1" rows="3" placeholder="Ceritakan situasinya..."></textarea>
+        <p class="small muted mt-12 mb-8">Emosi apa yang Anda rasakan?</p>
+        <textarea id="rq2" rows="3" placeholder="Apa yang Anda rasakan sebelum dan sesudah?"></textarea>
+        <p class="small muted mt-12 mb-8">Apa yang bisa dipelajari?</p>
+        <textarea id="rq3" rows="3" placeholder="Pelajaran apa yang bisa diambil?"></textarea>
+      </div>
+      <button class="btn" onclick="relapseNext()">Lanjut →</button>
+      <button class="btn btn-ghost mt-8" onclick="relapsePrev()">← Kembali</button>
+    </div>
+    <div id="rs-2" class="hidden fade-in mt-20">
+      <div class="card-accent mb-12">${renderAudioCard(SESSIONS[5],true)}</div>
+      <div class="quote-card"><p>"${getQuote({isRelapse:true}).text}"</p><div class="attr">— MentalHelp</div></div>
+      <div class="coach-bubble"><p class="small" style="line-height:1.7">Apa yang baru Anda alami adalah bagian dari perjalanan — bukan bukti bahwa Anda tidak bisa berubah. Otak dalam proses pemulihan akan mencoba kembali ke pola lama. Itu bukan kelemahan karakter — itu neurobiologi. <strong style="color:var(--text)">Langkah pertama Anda:</strong> dengarkan Emergency Session selama 10 menit. Streak baru dimulai dari detik ini.</p></div>
+      <button class="btn" onclick="completeRelapse()">Saya siap bangkit kembali ✦</button>
+      <button class="btn btn-ghost mt-8" onclick="closeRelapse()">Kembali ke beranda</button>
+    </div>
+  `;
+  document.getElementById('app').appendChild(ov);
+  document.querySelectorAll('.screen').forEach(s=>{if(s!==ov)s.classList.remove('active')});
+  ov.querySelectorAll('.play-btn-sm').forEach(btn=>{
+    btn.onclick=()=>playSession(parseInt(btn.closest('.expanded-player').dataset.sid));
+  });
+}
+function relapseNext(){relapseStep++;for(let i=0;i<3;i++){const el=document.getElementById(`rs-${i}`);if(el)el.classList.toggle('hidden',i!==relapseStep)}}
+function relapsePrev(){relapseStep--;for(let i=0;i<3;i++){const el=document.getElementById(`rs-${i}`);if(el)el.classList.toggle('hidden',i!==relapseStep)}}
+function completeRelapse(){state.streak=0;state.streakStart=new Date().toDateString();state.relapses=(state.relapses||0)+1;saveState();closeRelapse();refreshHome();showNotif('Streak dimulai kembali. Anda sudah mengambil langkah terpenting: bangkit.')}
+function closeRelapse(){const ov=document.getElementById('relapse-overlay');if(ov)ov.remove();switchTab('home')}
+
+// =============================================
+// HOME
+// =============================================
+function refreshHome(){
+  const h=new Date().getHours();
+  document.getElementById('greeting-text').textContent=h<12?'Selamat pagi':h<17?'Selamat siang':h<21?'Selamat sore':'Selamat malam';
+  const days=state.streak;
+  document.getElementById('streak-days').textContent=days;
+  document.getElementById('streak-circle').style.setProperty('--p',`${Math.min(days/90*100,100)}%`);
+  let msg=days===0?'Hari ini adalah hari pertama yang baru.':days===1?'Satu hari dijalani. Satu langkah nyata.':days<7?`${days} hari dijalani. Fondasi sedang dibangun.`:days<30?`${days} hari! Otak Anda aktif membentuk pola baru.`:`${days} hari yang luar biasa.`;
+  document.getElementById('streak-msg').textContent=msg;
+  document.getElementById('streak-badge').textContent=days>=30?'🔥 Momentum kuat':days>=7?'✦ Berkembang':'🌱 Dimulai';
+  const week=state.checkins.slice(-7);
+  document.getElementById('stat-checkins').textContent=week.length;
+  const avgU=week.length?(week.reduce((a,c)=>a+c.urge,0)/week.length).toFixed(1):'—';
+  document.getElementById('stat-avg-urge').textContent=avgU;
+  const allT=state.checkins.flatMap(c=>c.triggers);
+  const tc={};allT.forEach(t=>{tc[t]=(tc[t]||0)+1});
+  const top=Object.entries(tc).sort((a,b)=>b[1]-a[1])[0];
+  document.getElementById('stat-top-trigger').textContent=top?top[0].split(' ')[0]:'—';
+  const avgF=week.length?week.reduce((a,c)=>a+(10-c.urge),0)/week.length*10:null;
+  document.getElementById('stat-stability').textContent=avgF?Math.round(avgF)+'%':'—';
+  const days2=['Min','Sen','Sel','Rab','Kam','Jum','Sab'];
+  const last7=[];
+  for(let i=6;i>=0;i--){const d=new Date(Date.now()-i*86400000).toDateString();const e=state.checkins.filter(c=>c.date===d);const a=e.length?e.reduce((s,c)=>s+c.urge,0)/e.length:0;last7.push({day:days2[new Date(Date.now()-i*86400000).getDay()],val:a})}
+  const mx=Math.max(...last7.map(d=>d.val),1);
+  document.getElementById('urge-chart').innerHTML=last7.map(d=>`<div class="bar-col"><div class="bar ${d.val>=7?'high':d.val>0&&d.val<=4?'low':''}" style="height:${d.val?Math.round(d.val/mx*60):4}px"></div><div class="bar-label">${d.day}</div></div>`).join('');
+  const tb=document.getElementById('trend-badge');
+  if(week.length<2){tb.textContent='Data terbatas';tb.className='badge badge-purple'}
+  else{const half=Math.floor(week.length/2);const rec=week.slice(half).reduce((a,c)=>a+c.urge,0)/(week.length-half);const old=week.slice(0,half).reduce((a,c)=>a+c.urge,0)/half;if(rec<old){tb.textContent='↘ Membaik';tb.className='badge badge-green'}else if(rec>old){tb.textContent='↗ Meningkat';tb.className='badge badge-danger'}else{tb.textContent='→ Stabil';tb.className='badge badge-warn'}}
+  const ctx=state.checkins.length?state.checkins[state.checkins.length-1]:{};
+  const q=getQuote({feelings:ctx.feelings||[],urge:ctx.urge||5});
+  document.getElementById('home-quote').innerHTML=`<div class="quote-card"><p>"${q.text}"</p><div class="attr">— ${q.attr}</div></div>`;
+}
+
+function refreshProgress(){
+  document.getElementById('prog-streak').textContent=state.streak;
+  document.getElementById('prog-total').textContent=state.totalCheckins;
+  document.getElementById('prog-longest').textContent=state.longestStreak;
+  const all=state.checkins;
+  const now=new Date();
+  const month=all.filter(c=>(now-new Date(c.date))<30*86400000);
+  const prev=all.filter(c=>{const d=now-new Date(c.date);return d>=30*86400000&&d<60*86400000});
+  let growth='—';
+  if(prev.length&&month.length){const g=((month.length-prev.length)/prev.length*100).toFixed(0);growth=(g>0?'+':'')+g+'%'}
+  document.getElementById('prog-growth').textContent=growth;
+  const r7=all.slice(-7);
+  if(r7.length){const sc=Math.round(r7.reduce((a,c)=>a+(10-c.urge),0)/r7.length*10);document.getElementById('stability-arc').style.strokeDashoffset=213.6-(213.6*sc/100);document.getElementById('stability-pct').textContent=sc+'%';document.getElementById('stability-desc').textContent=sc>=70?'Stabilitas emosi Anda baik. Pertahankan ritme ini.':sc>=40?'Ada ruang untuk berkembang. Sesi audio dapat membantu.':'Fokus pada emotional regulation sekarang.'}
+  const allT=all.flatMap(c=>c.triggers);
+  if(allT.length){const counts={};allT.forEach(t=>{counts[t]=(counts[t]||0)+1});const sorted=Object.entries(counts).sort((a,b)=>b[1]-a[1]).slice(0,4);const mx=sorted[0][1];document.getElementById('trigger-analysis').innerHTML=`<div class="label mb-12">Pemicu Paling Sering</div>${sorted.map(([k,v])=>`<div style="margin-bottom:10px"><div class="flex justify-between items-center mb-4"><span class="small">${k}</span><span class="small muted">${v}x</span></div><div style="height:4px;background:var(--border);border-radius:2px"><div style="height:4px;background:var(--accent);border-radius:2px;width:${Math.round(v/mx*100)}%;transition:width .6s"></div></div></div>`).join('')}`}
+  const data14=[];
+  for(let i=13;i>=0;i--){const d=new Date(Date.now()-i*86400000).toDateString();const e=all.filter(c=>c.date===d);data14.push(e.length?e.reduce((a,c)=>a+c.urge,0)/e.length:0)}
+  const mx14=Math.max(...data14,1);
+  document.getElementById('progress-chart').innerHTML=data14.map(v=>`<div class="bar-col"><div class="bar ${v>=7?'high':v>0&&v<=4?'low':''}" style="height:${v?Math.round(v/mx14*60):4}px"></div></div>`).join('');
+}
+
+function renderAudioLibrary(){
+  const c=document.getElementById('audio-cards');
+  c.innerHTML=SESSIONS.map(s=>renderAudioCard(s,false)).join('');
+  c.querySelectorAll('.play-btn-sm').forEach(btn=>{
+    btn.onclick=()=>playSession(parseInt(btn.closest('.expanded-player').dataset.sid));
+  });
+}
+
+// =============================================
+// NAV
+// =============================================
+function switchTab(tab){
+  const rl=document.getElementById('relapse-overlay');if(rl)rl.remove();
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('active'));
+  document.getElementById(`screen-${tab}`).classList.add('active');
+  document.getElementById(`nav-${tab}`).classList.add('active');
+  if(tab==='home')refreshHome();
+  if(tab==='progress')refreshProgress();
+  if(tab==='audio')renderAudioLibrary();
+}
+
+function showNotif(msg){const el=document.getElementById('notif');el.textContent=msg;el.classList.add('show');setTimeout(()=>el.classList.remove('show'),3000)}
+function confirmReset(){if(confirm('Reset semua data pemulihan?')){state={streak:0,streakStart:null,longestStreak:0,totalCheckins:0,checkins:[],lastCheckinDate:null,relapses:0};saveState();refreshHome();refreshProgress();showNotif('Data direset. Perjalanan baru dimulai.')}}
+
+// CHIP SELECTION
+document.querySelectorAll('.chip').forEach(chip=>{chip.addEventListener('click',()=>chip.classList.toggle('selected'))});
+
+// ONBOARDING
+function startApp(){document.getElementById('onboard').classList.add('hidden');document.getElementById('main-app').classList.remove('hidden');document.getElementById('main-nav').classList.remove('hidden');localStorage.setItem('mh_rc_seen','1');refreshHome()}
+
+window.addEventListener('DOMContentLoaded',()=>{
+  updateUrge(5);
+  if(localStorage.getItem('mh_rc_seen'))startApp();
+  else document.getElementById('onboard').classList.remove('hidden');
+});
+</script>
+</body>
+</html>
